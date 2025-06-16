@@ -1,0 +1,39 @@
+/* /app/globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Additional styles for Leaflet popups in dark mode */
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: #1f2937; /* gray-800 */
+  color: #f3f4f6; /* gray-100 */
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+}
+
+.leaflet-popup-content-wrapper {
+  padding: 1px;
+}
+
+.leaflet-popup-content {
+  margin: 1rem;
+}
+
+.leaflet-popup-close-button {
+  color: #f3f4f6 !important;
+  padding: 4px 4px 0 0 !important;
+}
+
+.leaflet-container a.leaflet-popup-close-button {
+  color: #f3f4f6;
+}
+
+.popup-link {
+  color: #93c5fd; /* blue-300 */
+  text-decoration: none;
+}
+
+.popup-link:hover {
+  text-decoration: underline;
+}

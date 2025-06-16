@@ -1,0 +1,14 @@
+# Dependencies
+/node_modules
+/sanity/node_modules
+/sanity/otto-collection/node_modules
+
+# Local Environment Variables
+.env.local
+
+# Next.js
+/.next/
+/out/
+
+# Production
+/build
