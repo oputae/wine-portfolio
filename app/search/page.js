@@ -7,8 +7,17 @@ import {Suspense} from 'react';
 async function performSearch(keyword) {
   if (!keyword) return [];
 
-  const query = `*[_type == "wine" && pt::text(name, winery, region, grapes, tastingNotes, personalStory) match $keyword]`;
-  const params = {keyword: `${keyword}*`}; // Use wildcard for partial matches
+  // This new query uses a wildcard "match" on several fields, which works on all Sanity plans.
+  const query = `*[_type == "wine" && (
+    name match $keyword ||
+    winery match $keyword ||
+    region match $keyword ||
+    grapes match $keyword ||
+    tastingNotes match $keyword ||
+    personalStory match $keyword
+  )]`;
+  
+  const params = {keyword: `*${keyword}*`}; // Wraps the keyword with wildcards
   const wines = await client.fetch(query, params);
   return wines;
 }
