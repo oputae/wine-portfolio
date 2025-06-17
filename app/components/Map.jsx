@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css'; // Import CSS here
@@ -40,37 +40,63 @@ function MapController({ markers, highlightSlug, markerRefs }) {
 // The main map component
 export default function Map({ wines, highlightSlug }) {
     const markerRefs = useRef({});
+    const [mapError, setMapError] = useState(null);
     const markers = wines.filter((wine) => wine.coordinates);
+    const token = process.env.NEXT_PUBLIC_JAWG_ACCESS_TOKEN;
+
+    useEffect(() => {
+        if (!token) {
+            setMapError('Map configuration error: Missing access token');
+        }
+    }, [token]);
+
+    if (mapError) {
+        return (
+            <div className="h-full w-full bg-gray-800 flex items-center justify-center rounded-lg">
+                <p className="text-red-500">{mapError}</p>
+            </div>
+        );
+    }
+
+    if (!markers.length) {
+        return (
+            <div className="h-full w-full bg-gray-800 flex items-center justify-center rounded-lg">
+                <p>No wine locations available</p>
+            </div>
+        );
+    }
 
     return (
-        <MapContainer
-            center={[20, 10]} // Default center
-            zoom={2} // Default zoom
-            scrollWheelZoom={true}
-            className="h-full w-full rounded-lg z-10"
-        >
-            <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url={`https://{s}.tile.jawg.io/jawg-dark/{z}/{x}/{y}{r}.png?access-token=${process.env.NEXT_PUBLIC_JAWG_ACCESS_TOKEN}`}
-            />
-            {markers.map((wine) => (
-                <Marker
-                    key={wine._id}
-                    position={[wine.coordinates.lat, wine.coordinates.lng]}
-                    icon={wineIcon}
-                    ref={(el) => { if (el) markerRefs.current[wine.slug.current] = el; }}
-                >
-                    <Popup>
-                        <div className="text-base font-bold">{wine.name}</div>
-                        <div className="text-sm text-gray-300">{wine.winery}</div>
-                        {/* A standard <a> tag is more reliable inside Leaflet popups */}
-                        <a href={`/wine/${wine.slug.current}`} className="popup-link mt-2 block">
-                            View Details →
-                        </a>
-                    </Popup>
-                </Marker>
-            ))}
-            <MapController markers={markers} highlightSlug={highlightSlug} markerRefs={markerRefs} />
-        </MapContainer>
+        <div className="h-full w-full">
+            <MapContainer
+                center={[20, 10]} // Default center
+                zoom={2} // Default zoom
+                scrollWheelZoom={true}
+                className="h-full w-full rounded-lg z-10"
+            >
+                <TileLayer
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                    url={`https://{s}.tile.jawg.io/jawg-dark/{z}/{x}/{y}{r}.png?access-token=${token}`}
+                />
+                {markers.map((wine) => (
+                    <Marker
+                        key={wine._id}
+                        position={[wine.coordinates.lat, wine.coordinates.lng]}
+                        icon={wineIcon}
+                        ref={(el) => { if (el) markerRefs.current[wine.slug.current] = el; }}
+                    >
+                        <Popup>
+                            <div className="text-base font-bold">{wine.name}</div>
+                            <div className="text-sm text-gray-300">{wine.winery}</div>
+                            {/* A standard <a> tag is more reliable inside Leaflet popups */}
+                            <a href={`/wine/${wine.slug.current}`} className="popup-link mt-2 block">
+                                View Details →
+                            </a>
+                        </Popup>
+                    </Marker>
+                ))}
+                <MapController markers={markers} highlightSlug={highlightSlug} markerRefs={markerRefs} />
+            </MapContainer>
+        </div>
     );
 }
