@@ -1,79 +1,67 @@
 'use client';
 
-import { useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import L from 'leaflet';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
 
-// The stable icon fix for Next.js
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+// Fix for default Leaflet icon issue
+const icon = L.icon({
+  iconUrl: '/marker-icon.png',
+  iconRetinaUrl: '/marker-icon-2x.png',
+  shadowUrl: '/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
 });
 
-// The custom wine bottle icon
-const wineIcon = L.icon({
-    iconUrl: '/bottle-icon.png',
-    iconSize: [35, 35],
-    iconAnchor: [17, 35],
-    popupAnchor: [0, -35],
-    alt: 'Wine bottle location icon'
-});
-
-// A robust controller that handles resizing and zooming
-function MapController({ wines }) {
-    const map = useMap();
-
-    useEffect(() => {
-        // Wait until there are wines to display
-        if (!wines || wines.length === 0) return;
-
-        // A short delay to ensure the container has resized
-        const timer = setTimeout(() => {
-            // 1. Force the map to re-check its size
-            map.invalidateSize();
-            // 2. Calculate the bounds and fit the markers
-            const bounds = L.latLngBounds(wines.map(wine => [wine.coordinates.lat, wine.coordinates.lng]));
-            map.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
-        }, 100);
-
-        return () => clearTimeout(timer); // Cleanup timer
-
-    }, [map, wines]);
-
-    return null;
-}
-
+/**
+ * A client component to render a Leaflet map.
+ * @param {Array} wines - Array of wine objects with coordinates.
+ */
 export default function Map({ wines }) {
-    return (
-        <MapContainer
-            center={[20, 10]}
-            zoom={2}
-            scrollWheelZoom={true}
-            className="h-full w-full rounded-lg z-10"
-        >
-            <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url={`https://{s}.tile.jawg.io/jawg-dark/{z}/{x}/{y}{r}.png?access-token=${process.env.NEXT_PUBLIC_JAWG_ACCESS_TOKEN}`}
-            />
-            {wines && wines.map((wine) => (
-                <Marker
-                    key={wine._id}
-                    position={[wine.coordinates.lat, wine.coordinates.lng]}
-                    icon={wineIcon}
-                >
-                    <Popup>
-                        <div className="text-base font-bold">{wine.name}</div>
-                        <div className="text-sm text-gray-300">{wine.winery}</div>
-                        <a href={`/wine/${wine.slug.current}`} className="popup-link mt-2 block">
-                            View Details →
-                        </a>
-                    </Popup>
-                </Marker>
-            ))}
-            <MapController wines={wines} />
-        </MapContainer>
-    );
+  // Get the token from the build environment
+  const token = process.env.NEXT_PUBLIC_JAWG_ACCESS_TOKEN;
+  
+  const markers = wines.filter((wine) => wine.coordinates);
+  const mapCenter =
+    markers.length > 0
+      ? [markers[0].coordinates.lat, markers[0].coordinates.lng]
+      : [46.8182, 8.2275];
+
+  return (
+    <div className="h-full w-full">
+      <MapContainer
+        center={mapCenter}
+        zoom={markers.length > 0 ? 5 : 2}
+        scrollWheelZoom={true}
+        className="h-full w-full rounded-lg z-10"
+      >
+        <TileLayer
+          attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url={`https://{s}.tile.jawg.io/jawg-dark/{z}/{x}/{y}{r}.png?access-token=${token}`}
+        />
+        {markers.map((wine) => (
+          <Marker
+            key={wine._id}
+            position={[wine.coordinates.lat, wine.coordinates.lng]}
+            icon={icon}
+          >
+            <Popup>
+              <div className="text-base font-bold">{wine.name}</div>
+              <div className="text-sm text-gray-300">{wine.winery}</div>
+              <a
+                href={`/wine/${wine.slug.current}`}
+                className="popup-link mt-2 block"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                View Details →
+              </a>
+            </Popup>
+          </Marker>
+        ))}
+      </MapContainer>
+    </div>
+  );
 }
