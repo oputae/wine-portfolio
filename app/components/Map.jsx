@@ -1,32 +1,18 @@
-// /app/components/Map.jsx
 'use client';
 
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 
 const wineIcon = L.icon({
-  iconUrl: '/bottle-icon.png', // This is the correct path to your local icon
+  iconUrl: '/bottle-icon.png',
   iconSize: [35, 35],
   iconAnchor: [17, 35],
   popupAnchor: [0, -35],
   alt: 'Wine bottle location icon'
 });
-
-function MapFitter({ markers }) {
-  const map = useMap();
-
-  useEffect(() => {
-    if (markers.length > 0) {
-      const bounds = L.latLngBounds(markers.map(marker => [marker.coordinates.lat, marker.coordinates.lng]));
-      map.fitBounds(bounds, { padding: [50, 50] });
-    }
-  }, [markers, map]);
-
-  return null;
-}
 
 export default function Map({ wines, highlightSlug }) {
   const token = process.env.NEXT_PUBLIC_JAWG_ACCESS_TOKEN;
@@ -35,24 +21,28 @@ export default function Map({ wines, highlightSlug }) {
   useEffect(() => {
     if (highlightSlug && markerRefs.current[highlightSlug]) {
       setTimeout(() => {
+        // We also need to get the map instance from the ref to fly to the location
+        const map = markerRefs.current[highlightSlug]._map;
+        if(map) {
+          map.flyTo(markerRefs.current[highlightSlug].getLatLng(), 10); // zoom level 10
+        }
         markerRefs.current[highlightSlug].openPopup();
       }, 500);
     }
   }, [highlightSlug]);
 
   const markers = wines.filter((wine) => wine.coordinates);
-  const defaultCenter = [20, 0];
+  // Default center of the map, slightly north of the equator
+  const defaultCenter = [20, 10]; 
 
   return (
     <div className="h-full w-full">
       <MapContainer
         center={defaultCenter}
-        zoom={2}
+        zoom={2} // A hardcoded zoom level of 2 will show most of the world
         scrollWheelZoom={true}
         className="h-full w-full rounded-lg z-10"
       >
-        <MapFitter markers={markers} />
-
         <TileLayer
           attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url={`https://{s}.tile.jawg.io/jawg-dark/{z}/{x}/{y}{r}.png?access-token=${token}`}
