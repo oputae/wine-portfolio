@@ -8,7 +8,7 @@ import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 
 const wineIcon = L.icon({
-  iconUrl: '/bottle-icon.png',
+  iconUrl: '/winerylocation.png',
   iconSize: [35, 35],
   iconAnchor: [17, 35],
   popupAnchor: [0, -35],
