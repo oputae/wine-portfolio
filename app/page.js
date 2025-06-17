@@ -2,10 +2,17 @@ import { client } from '@/lib/sanity';
 import { Suspense } from 'react';
 import dynamic from 'next/dynamic';
 
-// We are now back to importing the main Map component
+// Map with explicit loading fallback
 const Map = dynamic(() => import('./components/Map'), {
     ssr: false,
-    loading: () => <div className="w-full h-full bg-gray-800 flex items-center justify-center rounded-lg"><p>Loading map...</p></div>
+    loading: () => (
+        <div className="w-full h-full bg-gray-800 flex items-center justify-center rounded-lg">
+            <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div>
+                <p>Loading map...</p>
+            </div>
+        </div>
+    )
 });
 
 async function getWines() {
@@ -16,8 +23,6 @@ async function getWines() {
 
 export default async function HomePage({ searchParams }) {
     const wines = await getWines();
-    // For now, we are simplifying and not using the highlight feature to ensure stability
-    // We can add it back once the map loads reliably.
 
     return (
         <div className="h-[calc(100vh-12rem)] flex flex-col">
@@ -25,9 +30,7 @@ export default async function HomePage({ searchParams }) {
                 Wine Origins Map
             </h1>
             <div className="flex-grow">
-                <Suspense>
-                    <Map wines={wines} />
-                </Suspense>
+                <Map wines={wines} />
             </div>
         </div>
     );
