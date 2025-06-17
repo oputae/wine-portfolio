@@ -1,8 +1,10 @@
+// /app/components/Map.jsx
 'use client';
 
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import { useEffect, useRef } from 'react';
 
 // Fix for default Leaflet icon issue
 const icon = L.icon({
@@ -15,14 +17,21 @@ const icon = L.icon({
   shadowSize: [41, 41],
 });
 
-/**
- * A client component to render a Leaflet map.
- * @param {Array} wines - Array of wine objects with coordinates.
- */
-export default function Map({ wines }) {
-  // Get the token from the build environment
+export default function Map({ wines, highlightSlug }) {
   const token = process.env.NEXT_PUBLIC_JAWG_ACCESS_TOKEN;
-  
+  // Create a place to store references to each marker
+  const markerRefs = useRef({});
+
+  useEffect(() => {
+    // If there's a slug to highlight and the marker exists...
+    if (highlightSlug && markerRefs.current[highlightSlug]) {
+      // ...open its popup after a short delay to allow the map to load.
+      setTimeout(() => {
+        markerRefs.current[highlightSlug].openPopup();
+      }, 500);
+    }
+  }, [highlightSlug]); // This effect runs when the highlightSlug changes
+
   const markers = wines.filter((wine) => wine.coordinates);
   const mapCenter =
     markers.length > 0
@@ -31,11 +40,6 @@ export default function Map({ wines }) {
 
   return (
     <div className="h-full w-full">
-      {/* ===== DEBUG MESSAGE ===== */}
-      <p className="text-xs text-center text-red-400 mb-2">
-        Token Loaded: {token ? `Yes (starts with: ${token.substring(0, 4)}...)` : 'No (variable is missing)'}
-      </p>
-
       <MapContainer
         center={mapCenter}
         zoom={markers.length > 0 ? 5 : 2}
@@ -51,18 +55,18 @@ export default function Map({ wines }) {
             key={wine._id}
             position={[wine.coordinates.lat, wine.coordinates.lng]}
             icon={icon}
+            // Assign a ref to this marker using its slug as the key
+            ref={(el) => (markerRefs.current[wine.slug.current] = el)}
           >
             <Popup>
               <div className="text-base font-bold">{wine.name}</div>
               <div className="text-sm text-gray-300">{wine.winery}</div>
-              <a
+              <Link
                 href={`/wine/${wine.slug.current}`}
                 className="popup-link mt-2 block"
-                target="_blank"
-                rel="noopener noreferrer"
               >
                 View Details →
-              </a>
+              </Link>
             </Popup>
           </Marker>
         ))}

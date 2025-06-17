@@ -31,17 +31,16 @@ export default async function WinePage({params}) {
           href="/collection"
           className="text-indigo-400 hover:text-indigo-300 transition-colors"
         >
-          &larr; Back to Collection
+          ← Back to Collection
         </Link>
+        {/* === THIS LINK HAS BEEN CHANGED === */}
         {wine.coordinates && (
-          <a
-            href={`https://www.google.com/maps/search/?api=1&query=${wine.coordinates.lat},${wine.coordinates.lng}`}
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            href={`/?highlight=${wine.slug.current}`}
             className="text-indigo-400 hover:text-indigo-300 transition-colors"
           >
-            View on Map &rarr;
-          </a>
+            View on Map →
+          </Link>
         )}
       </div>
 
