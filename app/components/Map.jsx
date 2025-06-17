@@ -1,22 +1,37 @@
 // /app/components/Map.jsx
 'use client';
 
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { useEffect, useRef } from 'react';
-import Link from 'next/link'; // <--- THIS IS THE MISSING LINE
+import Link from 'next/link';
 
-// Fix for default Leaflet icon issue
-const icon = L.icon({
-  iconUrl: '/marker-icon.png',
-  iconRetinaUrl: '/marker-icon-2x.png',
-  shadowUrl: '/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
+// ===== CHANGE #1: Using a wine bottle icon =====
+const wineIcon = L.icon({
+  iconUrl: 'https://i.imgur.com/L4zK12s.png', // A simple, free wine bottle icon
+  iconSize: [35, 35], // The size of the icon
+  iconAnchor: [17, 35], // The point of the icon which will correspond to marker's location
+  popupAnchor: [0, -35], // The point from which the popup should open relative to the iconAnchor
 });
+
+
+// ===== CHANGE #2: This new component will automatically zoom the map =====
+function MapFitter({ markers }) {
+  const map = useMap(); // Get access to the map instance
+
+  useEffect(() => {
+    if (markers.length > 0) {
+      // Create a 'bounds' object that contains all marker locations
+      const bounds = L.latLngBounds(markers.map(marker => [marker.coordinates.lat, marker.coordinates.lng]));
+      // Tell the map to fit itself to those bounds
+      map.fitBounds(bounds, { padding: [50, 50] }); // Add some padding so icons aren't on the very edge
+    }
+  }, [markers, map]); // Rerun this effect if the markers or map change
+
+  return null; // This component doesn't render anything itself
+}
+
 
 export default function Map({ wines, highlightSlug }) {
   const token = process.env.NEXT_PUBLIC_JAWG_ACCESS_TOKEN;
@@ -31,19 +46,20 @@ export default function Map({ wines, highlightSlug }) {
   }, [highlightSlug]);
 
   const markers = wines.filter((wine) => wine.coordinates);
-  const mapCenter =
-    markers.length > 0
-      ? [markers[0].coordinates.lat, markers[0].coordinates.lng]
-      : [46.8182, 8.2275];
+
+  // We no longer need to calculate the center here, MapFitter will do it.
+  const defaultCenter = [20, 0]; // A default center for when there are no markers.
 
   return (
     <div className="h-full w-full">
       <MapContainer
-        center={mapCenter}
-        zoom={markers.length > 0 ? 5 : 2}
+        center={defaultCenter}
+        zoom={2} // Default zoom, will be overridden by MapFitter
         scrollWheelZoom={true}
         className="h-full w-full rounded-lg z-10"
       >
+        <MapFitter markers={markers} /> {/* Add the auto-zoomer component here */}
+        
         <TileLayer
           attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url={`https://{s}.tile.jawg.io/jawg-dark/{z}/{x}/{y}{r}.png?access-token=${token}`}
@@ -52,7 +68,7 @@ export default function Map({ wines, highlightSlug }) {
           <Marker
             key={wine._id}
             position={[wine.coordinates.lat, wine.coordinates.lng]}
-            icon={icon}
+            icon={wineIcon} // Use our new wine bottle icon
             ref={(el) => (markerRefs.current[wine.slug.current] = el)}
           >
             <Popup>
