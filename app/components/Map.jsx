@@ -8,11 +8,11 @@ import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 
 const wineIcon = L.icon({
-  iconUrl: '/winerylocation.png',
+  iconUrl: '/bottle-icon.png', // This is the correct path to your local icon
   iconSize: [35, 35],
   iconAnchor: [17, 35],
   popupAnchor: [0, -35],
-  alt: 'Wine bottle location icon' // Added for better accessibility
+  alt: 'Wine bottle location icon'
 });
 
 function MapFitter({ markers }) {
@@ -52,7 +52,7 @@ export default function Map({ wines, highlightSlug }) {
         className="h-full w-full rounded-lg z-10"
       >
         <MapFitter markers={markers} />
-        
+
         <TileLayer
           attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url={`https://{s}.tile.jawg.io/jawg-dark/{z}/{x}/{y}{r}.png?access-token=${token}`}
