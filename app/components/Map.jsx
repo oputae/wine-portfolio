@@ -5,6 +5,7 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { useEffect, useRef } from 'react';
+import Link from 'next/link'; // <--- THIS IS THE MISSING LINE
 
 // Fix for default Leaflet icon issue
 const icon = L.icon({
@@ -19,18 +20,15 @@ const icon = L.icon({
 
 export default function Map({ wines, highlightSlug }) {
   const token = process.env.NEXT_PUBLIC_JAWG_ACCESS_TOKEN;
-  // Create a place to store references to each marker
   const markerRefs = useRef({});
 
   useEffect(() => {
-    // If there's a slug to highlight and the marker exists...
     if (highlightSlug && markerRefs.current[highlightSlug]) {
-      // ...open its popup after a short delay to allow the map to load.
       setTimeout(() => {
         markerRefs.current[highlightSlug].openPopup();
       }, 500);
     }
-  }, [highlightSlug]); // This effect runs when the highlightSlug changes
+  }, [highlightSlug]);
 
   const markers = wines.filter((wine) => wine.coordinates);
   const mapCenter =
@@ -55,7 +53,6 @@ export default function Map({ wines, highlightSlug }) {
             key={wine._id}
             position={[wine.coordinates.lat, wine.coordinates.lng]}
             icon={icon}
-            // Assign a ref to this marker using its slug as the key
             ref={(el) => (markerRefs.current[wine.slug.current] = el)}
           >
             <Popup>
