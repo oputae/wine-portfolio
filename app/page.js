@@ -1,19 +1,31 @@
+import { client } from '@/lib/sanity';
 import { Suspense } from 'react';
 import dynamic from 'next/dynamic';
 
-// Dynamically import our NEW test map component
-const MinimalMap = dynamic(() => import('./components/MinimalMap'), {
-    ssr: false, // Make sure it only runs on the client
-    loading: () => <div style={{height: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center'}}><p>Loading Test Map...</p></div>
+// Import our final, stable Map component
+const Map = dynamic(() => import('./components/Map'), {
+    ssr: false,
+    loading: () => <div className="w-full h-full bg-gray-800 flex items-center justify-center rounded-lg"><p>Loading map...</p></div>
 });
 
-export default function HomePage() {
+async function getWines() {
+    const query = `*[_type == "wine" && defined(coordinates)]{ _id, name, winery, slug, coordinates }`;
+    const wines = await client.fetch(query);
+    return wines;
+}
+
+export default async function HomePage({ searchParams }) {
+    const wines = await getWines();
+    const highlightSlug = searchParams.highlight || null;
+
     return (
-        <div>
-            <h1 style={{textAlign: 'center', margin: '2rem', fontSize: '2rem'}}>Minimal Map Test</h1>
-            <div style={{ height: '80vh', width: '100%', border: '1px solid #333' }}>
+        <div className="h-[calc(100vh-12rem)] flex flex-col">
+            <h1 className="text-3xl font-bold mb-6 text-center">
+                Wine Origins Map
+            </h1>
+            <div className="flex-grow">
                 <Suspense>
-                    <MinimalMap />
+                    <Map wines={wines} highlightSlug={highlightSlug} />
                 </Suspense>
             </div>
         </div>
