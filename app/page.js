@@ -1,40 +1,34 @@
-// /app/page.js
-
 import { client } from '@/lib/sanity';
-import HomepageMap from './components/HomepageMap';
-import { Suspense } from 'react'; // Make sure to import Suspense
+import { Suspense } from 'react';
+import dynamic from 'next/dynamic';
 
-// This data fetching happens on the server during the build
+// We now dynamically import our single, all-in-one Map component
+const Map = dynamic(() => import('./components/Map'), {
+    ssr: false, // Ensure it only runs on the client
+    loading: () => <div className="w-full h-full bg-gray-800 flex items-center justify-center rounded-lg"><p>Loading map...</p></div>
+});
+
 async function getWines() {
-  const query = `*[_type == "wine" && defined(coordinates)]{
-    _id,
-    name,
-    winery,
-    slug,
-    coordinates
-  }`;
-  const wines = await client.fetch(query);
-  return wines;
+    const query = `*[_type == "wine" && defined(coordinates)]{ _id, name, winery, slug, coordinates }`;
+    const wines = await client.fetch(query);
+    return wines;
 }
 
-// This is the main server component for the homepage
-export default async function HomePage() {
-  const wines = await getWines();
+export default async function HomePage({ searchParams }) {
+    const wines = await getWines();
+    // We get the highlight slug here and pass it down
+    const highlightSlug = searchParams.highlight || null;
 
-  return (
-    <div className="h-[calc(100vh-12rem)] flex flex-col">
-      <h1 className="text-3xl font-bold mb-6 text-center">
-        Wine Origins Map
-      </h1>
-      <div className="flex-grow">
-        {/*
-          THE FIX: We must wrap any component that uses useSearchParams
-          in a <Suspense> boundary.
-        */}
-        <Suspense fallback={<div className="text-center">Loading map...</div>}>
-          <HomepageMap wines={wines} />
-        </Suspense>
-      </div>
-    </div>
-  );
+    return (
+        <div className="h-[calc(100vh-12rem)] flex flex-col">
+            <h1 className="text-3xl font-bold mb-6 text-center">
+                Wine Origins Map
+            </h1>
+            <div className="flex-grow">
+                <Suspense>
+                    <Map wines={wines} highlightSlug={highlightSlug} />
+                </Suspense>
+            </div>
+        </div>
+    );
 }
