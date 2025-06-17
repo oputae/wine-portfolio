@@ -7,12 +7,12 @@ import L from 'leaflet';
 import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 
-// Using the local icon from the 'public' folder
 const wineIcon = L.icon({
   iconUrl: '/bottle-icon.png',
   iconSize: [35, 35],
   iconAnchor: [17, 35],
   popupAnchor: [0, -35],
+  alt: 'Wine bottle location icon' // Added for better accessibility
 });
 
 function MapFitter({ markers }) {
